@@ -1,0 +1,212 @@
+<table class="table table-hover table-bordered border-dark">
+
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Item Name</th>
+                    <th scope="col">Qty</th>
+                    <th scope="col">Retail Price</th>
+                    <th scope="col">Total Retail Price</th>
+                    <th scope="col">Listing Price</th>
+                    <th scope="col">Total Listing Price</th>
+                    <!-- <th scope="col">Remarks</th> -->
+
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                include('../actions/products/getAllProducts.php');
+                foreach ($allProducts as $product) :
+                ?>
+                    <tr>
+                        <td>
+                            <?php
+                            //check the if the date is today
+                            if ($product['date'] == date("Y-m-d")){
+                            ?>
+                                <b style="color: green">Today</b>
+                            <?php
+                                }else{
+                                    echo $product['date'];
+                                }
+                            ?>
+
+                        </td>
+                        <td><?php echo $product['name']; ?></td>
+                        <td><?php echo $product['qty']; ?></td>
+                        <td><?php echo "₱ ".$product['rp']; ?></td>
+                        <td><?php echo "₱ ".$product['trp']; ?></td>
+                        <td><?php echo "₱ ".$product['lp']; ?></td>
+                        <td><?php echo "₱ ".$product['tlp']; ?></td>
+                        <!-- <td>[Remarks]</td> -->
+                    </tr>
+
+
+                <?php endforeach; ?>
+            </tbody>
+
+        </table>
+
+        <?php 
+    include('getAllProducts.php');
+
+    $is_search = false;
+    $searchPrd = array();
+
+    if(isset($_POST['search'])){
+        $prdCode = $_POST['search'];
+
+        if(!empty($prdCode)) {
+            for($i = 0; $i < sizeof($allProducts); $i++){
+                if(strpos($allProducts[$i]['code'], $prdCode) !== false){
+                    $is_search = true;
+                    $searchPrd[$i] = array(
+                        "id" =>$allProducts[$i]['id'], 
+                        "name" => $allProducts[$i]['name'],
+                        "code" => $allProducts[$i]['code'],
+                        "price" => $allProducts[$i]['price'],
+                    );
+
+                }
+            }
+        }else{
+            $is_search = false;
+        }
+
+    }
+
+
+?>
+
+<div id="view-list" class="table-responsive">
+    <table class="table table-hover table-bordered border-dark caption-top" id="product-table">
+    <caption>List of Products</caption>
+    <thead class="table-dark">
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Product Name</th>
+            <th scope="col">Product Code</th>
+            <th scope="col">Product Price</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="search-result">
+        <?php 
+                    if(!$is_search){
+                        $ArrayObject = new ArrayObject($allProducts);
+                        $listPrd = $ArrayObject->getArrayCopy();
+
+                    }else{
+                        $ArrayObject = new ArrayObject($searchPrd);
+                        $listPrd = $ArrayObject->getArrayCopy();
+                    }
+
+                    foreach($listPrd as $product):
+            ?>
+                <tr>
+                <th scope="row"><?php echo $product['id'] ?></th>
+                <td><?php echo $product['name'] ?></td>
+                <td><?php echo $product['code'] ?></td>
+                <td><?php echo "₱ ".$product['price'] ?></td>
+                <td>
+                    <div id="btn-edit">
+                        <button onclick="edit('<?php echo $product['id']; ?>')" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal-edit-<?php echo $product['id']?>">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <!-- onclick="deletePrd('<?php echo $product['id']; ?>')" -->
+                        <button  class="btn btn-danger" 
+                        data-bs-toggle="modal" data-bs-target="#modal-delete-<?php echo $product['id']; ?>" id="btn-delete-<?php echo $product['id']; ?>">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+                </tr>
+            
+                <!-- Modal Edit -->
+                <div class="modal fade" id="modal-edit-<?php echo $product['id']?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Edit Product ID: <?php echo $product['id']; ?></h5>
+                            <button onclick="reload()" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <label for="product-name" class="form-label">Product Name</label>
+                                        <input value="<?php echo $product['name']; ?>" type="text" class="form-control" name="product-name-edit" id="product-name-edit-<?php echo $product['id']; ?>" required>
+                                </div>
+                                <div class="col-6">
+                                <label for="product-code" class="form-label">Product Code</label>
+                                    <input value="<?php echo $product['code']; ?>" type="text" class="form-control" name="product-code-edit" id="product-code-edit-<?php echo $product['id']; ?>" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="product-price" class="form-label">Product Price</label>                                    
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon1">₱</span>
+                                        <input value="<?php echo $product['price']; ?>" type="number" class="form-control" name="product-price-edit" id="product-price-edit-<?php echo $product['id']; ?>" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="edit-result-<?php echo $product['id']; ?>"></div>
+                        </div>
+                        </form>
+                        
+                        
+
+                        <div class="modal-footer">
+                            <button onclick="reload()" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="btn-saved-edit-<?php echo $product['id']; ?>" type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal delete -->
+                <div class="modal fade" id="modal-delete-<?php echo $product['id']; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" style="color: #BB2D3B;">Delete this?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row bg-dark text-white p-3">
+                                    <div class="col-1 fw-bold">ID</div>
+                                    <div class="col fw-bold">Product Name</div>
+                                    <div class="col fw-bold">Product Code</div>
+                                    <div class="col fw-bold">Product Price</div>
+                                </div>
+                                <div class="row p-3">
+                                    <div class="col-1"><?php echo $product['id']; ?></div>
+                                    <div class="col"><?php echo $product['name']; ?></div>
+                                    <div class="col"><?php echo $product['code']; ?></div>
+                                    <div class="col"><?php echo "₱ ".$product['price']; ?></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button onclick="deletePrd('<?php echo $product['id']; ?>')" type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>  
+
+                
+
+        <?php 
+                endforeach; 
+            
+
+    
+    
+        ?>
+    </tbody>
+    </table>
+
+
+</div>
+
+<script src="/PROJECT_TPS/js/edit_products.js"></script>
+
